@@ -12,13 +12,19 @@ import com.example.application.utils.InjectService;
 import com.example.application.utils.UtilNavigation;
 import com.example.application.utils.Globals;
 import com.vaadin.flow.component.AttachEvent;
+import com.vaadin.flow.component.Component;
+import com.vaadin.flow.component.Text;
 import com.vaadin.flow.component.UI;
 import com.vaadin.flow.component.accordion.Accordion;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.checkbox.Checkbox;
+import com.vaadin.flow.component.formlayout.FormLayout;
+import com.vaadin.flow.component.grid.*;
+import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.component.html.H5;
 import com.vaadin.flow.component.html.Label;
 import com.vaadin.flow.component.html.Span;
+import com.vaadin.flow.component.icon.Icon;
 import com.vaadin.flow.component.icon.VaadinIcon;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
@@ -28,13 +34,10 @@ import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
 import org.springframework.beans.factory.annotation.Autowired;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Locale;
+import java.util.*;
 
 /**
  * Startseite beim Aufruf der Seite bzw. starten der Applikation.
- * Zeigt zu Beginn alle Stellenanzeigen, die gespeichert sind an.
  *
  * @author hh
  * @since 24.05.2023
@@ -189,7 +192,7 @@ public class MainView extends VerticalLayout {
 
 
     /**
-     * Diese Methode verhindert, dass ein Nutzer, der nicht eingeloggt ist, diese View sehen kann.
+     * Diese Methode verhindert dass ein Nutzer, der nicht eingeloggt ist, diese View sehen kann
      * Außerdem werden hier mittels der JobControl, alle Stellenanzeigen aus der Datenbank ausgelesen und in die Tabelle eingefügt
      *
      * @param attachEvent Das Event-Objekt.
@@ -215,9 +218,9 @@ public class MainView extends VerticalLayout {
     }
 
     /**
-     * Diese Hilfsmethode erzeugt die Icons, die Anzeige, ob eine Stelle belegt ist
+     * Diese Hilfs-Methode erzeugt die Icons, die Anzeige ob eine Stelle belegt ist
      *
-     * @param status boolean Wert, der bestimmt, ob die Stellenanzeige bereits belegt ist.
+     * @param status boolscher Wert, der bestimmt ob die Stellenanzeige bereits belegt ist.
      * @return gibt das Icon zurück, welches dann angezeigt wird
      */
     private Span createStatusIcon(boolean status) {
@@ -270,7 +273,7 @@ public class MainView extends VerticalLayout {
     }
 
     /**
-     * Methode um die Filtereinstellungen zu laden
+     * Methode um die Filtereinstsellungen zu laden
      */
     public void loadFilterSettings(){
         InjectService.Filter filter = jobInjectService.getFilter();
@@ -288,7 +291,7 @@ public class MainView extends VerticalLayout {
             cards.add(card);
         }
 
-        select.setValue(filterType);
+        select.setValue(filterType==null ? "" : Utils.capitalizeString(filterType));//Todo
         value.setValue(filterValue==null ? "" : filterValue);
         ownToggle.setValue(toggle);
         reservedToggle.setValue(reserved);
@@ -314,7 +317,7 @@ public class MainView extends VerticalLayout {
 
     /**
      * Methode um den Join aus eigenen Stellenanzeigen und den gefilterten zu erzeugen
-     * @param newStellenanzeigen  Liste der gefilterten Stellenanzeigen
+     * @param newStellenanzeigen    -   Liste der gefilterten Stellenanzeigen
      */
     private void checkIfOwn(List<StellenanzeigenDTO> newStellenanzeigen){
         if(ownToggle.getValue()){
@@ -336,7 +339,7 @@ public class MainView extends VerticalLayout {
 
     /**
      * Methode um den Join aus den reservierten oder nicht reserveirten Stellenanzeige zu erzeugen
-     * @param newStellenanzeigen  Liste der gefilterten Stellenanzeigen
+     * @param newStellenanzeigen    -   Liste der gefilterten Stellenanzeigen
      */
     private List<StellenanzeigenDTO> checkIfReserved(List<StellenanzeigenDTO> newStellenanzeigen){
         if(reservedToggle.getValue()) {
@@ -352,12 +355,19 @@ public class MainView extends VerticalLayout {
 
     /**
      * Methode um die Elemente der Stellenanzeigen zu erstellen
-     * @param list  Liste der anzuzeigenden Stellenanzeige
+     * @param list    -   Liste der anzuzeigenden Stellenanzeige
      */
     private void addJobItems(List<StellenanzeigenDTO> list){
         grid.removeAll();
+
+        Collection<Component> first = new ArrayList<>();
+        Collection<Component> second = new ArrayList<>();
+
         for(StellenanzeigenDTO element: list){
             VerticalLayout itemBox = new VerticalLayout();
+
+            boolean active = element.getStartdatum()!=null ? element.getStartdatum().toLowerCase(Locale.ROOT).contains("sofort") : false;
+
             H5 header = new H5(element.getTitel());
 
             HorizontalLayout filler = new HorizontalLayout();
@@ -379,9 +389,18 @@ public class MainView extends VerticalLayout {
                 jobInjectService.setStellenanzeige(element);
                 UtilNavigation.navigateToJobAdvertisement();
             });
+
             itemBox.add(header, contents);
-            grid.add(itemBox);
+            if(active){
+                first.add(itemBox);
+            }else{
+                itemBox.getStyle().set("background-color", "#efefef");
+                second.add(itemBox);
+            }
         }
+
+        grid.add(first);
+        grid.add(second);
     }
 
     /**
