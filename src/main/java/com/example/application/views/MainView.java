@@ -12,6 +12,7 @@ import com.example.application.utils.InjectService;
 import com.example.application.utils.UtilNavigation;
 import com.example.application.utils.Globals;
 import com.vaadin.flow.component.AttachEvent;
+import com.vaadin.flow.component.Component;
 import com.vaadin.flow.component.Text;
 import com.vaadin.flow.component.UI;
 import com.vaadin.flow.component.accordion.Accordion;
@@ -33,10 +34,7 @@ import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
 import org.springframework.beans.factory.annotation.Autowired;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Locale;
-import java.util.Optional;
+import java.util.*;
 
 /**
  * Startseite beim Aufruf der Seite bzw. starten der Applikation.
@@ -293,7 +291,7 @@ public class MainView extends VerticalLayout {
             cards.add(card);
         }
 
-        select.setValue(filterType);
+        select.setValue(filterType==null ? "" : Utils.capitalizeString(filterType));//Todo
         value.setValue(filterValue==null ? "" : filterValue);
         ownToggle.setValue(toggle);
         reservedToggle.setValue(reserved);
@@ -361,8 +359,15 @@ public class MainView extends VerticalLayout {
      */
     private void addJobItems(List<StellenanzeigenDTO> list){
         grid.removeAll();
+
+        Collection<Component> first = new ArrayList<>();
+        Collection<Component> second = new ArrayList<>();
+
         for(StellenanzeigenDTO element: list){
             VerticalLayout itemBox = new VerticalLayout();
+
+            boolean active = element.getStartdatum()!=null ? element.getStartdatum().toLowerCase(Locale.ROOT).contains("sofort") : false;
+
             H5 header = new H5(element.getTitel());
 
             HorizontalLayout filler = new HorizontalLayout();
@@ -384,9 +389,18 @@ public class MainView extends VerticalLayout {
                 jobInjectService.setStellenanzeige(element);
                 UtilNavigation.navigateToJobAdvertisement();
             });
+
             itemBox.add(header, contents);
-            grid.add(itemBox);
+            if(active){
+                first.add(itemBox);
+            }else{
+                itemBox.getStyle().set("background-color", "#efefef");
+                second.add(itemBox);
+            }
         }
+
+        grid.add(first);
+        grid.add(second);
     }
 
     /**
