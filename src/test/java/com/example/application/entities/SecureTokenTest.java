@@ -9,6 +9,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.time.LocalDateTime;
+import java.time.temporal.ChronoUnit;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
@@ -42,8 +43,8 @@ class SecureTokenTest {
 
     @Test
     void getExpireAt() {
-        LocalDateTime expireAt = LocalDateTime.now().plusHours(1);
-        assertEquals(expireAt, secureToken.getExpireAt());
+        LocalDateTime expireAt = LocalDateTime.now().truncatedTo(ChronoUnit.SECONDS).plusHours(1);
+        assertEquals(expireAt, secureToken.getExpireAt().truncatedTo(ChronoUnit.SECONDS));
     }
 
     @Test
